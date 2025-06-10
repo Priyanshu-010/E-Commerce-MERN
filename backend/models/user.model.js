@@ -38,5 +38,19 @@ const userSchema = new mongoose.Schema({
   timestamps:true
 })
 
+// Pre save middlware to hash password before saving it
+userSchema.pre("save", async function(next){
+  if(!this.isModified("password")) return next
+  
+  try {
+    const salt = await bcrypt.genSalt(10)
+    const hash = await bcrypt.hash(this.password, salt)
+    this.password = hash
+    next();
+  } catch (error) {
+    next(error) 
+  }
+})
+
 const User = mongoose.model("user", userSchema);
 export default User
