@@ -95,3 +95,32 @@ export const logout = (req, res)=>{
     res.status(500).send(error.message, "Internal Server Error");
   }
 }
+
+export const refreshToken = async (req, res)=>{
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if(!refreshToken){
+      return res.status(401).send("Refresh Token not found");
+    }
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const storedToken = await redis.get(`refresh_token:${decoded.userId}`)
+
+    if(storedToken != refreshToken){
+      return res.status(401).send("Invalid Refresh Token");
+    }
+    const accessToken = jwt.sign({userId: decoded.userId}, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: "15m"
+    })
+
+    res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  }) 
+    res.json({message: "Refresh Token Generated"});
+  } catch (error) {
+    console.log("Error in refreshToken", error.message)
+    res.status(500).send("Internal Server Error");
+  }
+}
