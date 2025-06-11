@@ -57,8 +57,28 @@ export const signup = async (req, res)=>{
       res.status(500).send(error.message, "Internal Server Error");
   }
 }
-export const login = (req, res)=>{
-  res.send("login")
+export const login = async (req, res)=>{
+  try {
+    const {email, password} = req.body;
+    const user = await User.findOne({email});
+
+    if(user && (await user.comparePassword(password))){
+      const {accessToken, refreshToken} = generateToken(user._id);
+      await storeRefreshToken(user._id, refreshToken);
+
+      setCookies(res, accessToken, refreshToken);
+
+      res.status(200).send({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        message: "Login Successful"
+      })
+    }
+  } catch (error) {
+    res.status(500).send(error.message, "Internal Server Error");
+  }
 }
 export const logout = (req, res)=>{
   try {
