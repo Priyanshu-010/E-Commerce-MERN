@@ -23,6 +23,11 @@ const setCookies = (res, accessToken, refreshToken)=>{
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
   })
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  })
 }
 
 export const signup = async (req, res)=>{
@@ -56,5 +61,17 @@ export const login = (req, res)=>{
   res.send("login")
 }
 export const logout = (req, res)=>{
-  res.send("logout")
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if(refreshToken){
+      const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    }
+
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    res.json("Logout Successful");
+  } catch (error) {
+    res.status(500).send(error.message, "Internal Server Error");
+  }
 }
