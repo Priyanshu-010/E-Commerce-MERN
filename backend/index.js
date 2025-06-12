@@ -13,7 +13,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 
 app.use('/api/auth', authRouter);
-app.use('/api/product', productRouter);
+app.use('/api/products', productRouter);
 
 app.listen(PORT, ()=>{
   console.log(`Server is running on port ${PORT}`);
